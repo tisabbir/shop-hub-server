@@ -91,3 +91,32 @@ All API requests are prefixed with:
 ### **4.1. Running the Server**
 
 - After setting up the project, you can run the server using: nmp start
+
+- The server should be running on `http://localhost:5000`.
+
+### **4.2. Testing the APIs**
+
+- Use tools like Postman or cURL to test the API endpoints.
+
+## **5. Project Structure**
+
+- **/controllers**: Contains the logic for handling API requests.
+- **/models**: Defines the data models and schemas.
+- **/routes**: Contains the route definitions and API endpoints.
+- **/config**: Configuration files, including MongoDB connection.
+- **/middlewares**: Custom middleware functions for request handling.
+- **server.js**: Main entry point for the backend server.
+
+## **6. Future Improvements**
+
+- Add user authentication and authorization.
+- Implement advanced filtering and sorting features.
+- Integrate with external APIs for more functionalities.
+
+## **7. Contributing**
+
+If you'd like to contribute to this project, feel free to fork the repository and submit a pull request.
+
+## **8. License**
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
