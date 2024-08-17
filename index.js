@@ -1,7 +1,7 @@
 // requirements -> express, cors
-const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
+const express = require("express");
+const cors = require("cors");
+require("dotenv").config();
 
 //create app
 const app = express();
@@ -9,12 +9,13 @@ const app = express();
 //define port address
 const port = process.env.PORT || 5000;
 
-// use the middlewares 
+// use the middlewares
 app.use(cors());
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const uri = "mongodb+srv://shopHubUser:O2CK9fRP9xUNsjZG@cluster0.bq6unn4.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const { MongoClient, ServerApiVersion } = require("mongodb");
+const uri =
+  "mongodb+srv://shopHubUser:O2CK9fRP9xUNsjZG@cluster0.bq6unn4.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -22,7 +23,7 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
 
 async function run() {
@@ -34,16 +35,35 @@ async function run() {
     const products = client.db("shopHubDB").collection("products");
 
     // Pagination Route
-    app.get('/products', async (req, res) => {
-      const page = parseInt(req.query.page) || 1;  // Current page number, default to 1 if not provided
+    app.get("/products", async (req, res) => {
+      const page = parseInt(req.query.page) || 1; // Current page number, default to 1 if not provided
       const limit = parseInt(req.query.limit) || 9; // Number of products per page, default to 10 if not provided
       const skip = (page - 1) * limit; // Calculate how many products to skip
 
+      const searchQuery = req.query.search || ""; // Search query from the frontend
+
+      const category = req.query.category || ""; // Category filter from the frontend
+      const brand = req.query.brand || ""; // Brand filter from the frontend
+      const minPrice = parseInt(req.query.minPrice) || 0; // Minimum price filter from the frontend
+      const maxPrice = parseInt(req.query.maxPrice) || Number.MAX_SAFE_INTEGER; // Maximum price filter from the frontend
+
+      // Create a filter based on the search query, category, brand, and price range
+      const query = {
+        ...(searchQuery && { name: { $regex: searchQuery, $options: "i" } }),
+        ...(category && { category: category }),
+        ...(brand && { brand: brand }),
+        price: { $gte: minPrice, $lte: maxPrice },
+      };
+
       // Get the total number of products in the collection
-      const totalProducts = await products.countDocuments();
+      const totalProducts = await products.countDocuments(query);
 
       // Fetch the products with pagination
-      const result = await products.find().skip(skip).limit(limit).toArray();
+      const result = await products
+        .find(query)
+        .skip(skip)
+        .limit(limit)
+        .toArray();
 
       // Send the paginated products along with pagination info
       res.json({
@@ -51,13 +71,15 @@ async function run() {
         limit,
         totalPages: Math.ceil(totalProducts / limit),
         totalProducts,
-        products: result
+        products: result,
       });
     });
 
     // Ping MongoDB to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
@@ -65,8 +87,8 @@ async function run() {
 }
 run().catch(console.dir);
 
-app.get('/', (req, res) => {
-  res.send('Shop Hub is running');
+app.get("/", (req, res) => {
+  res.send("Shop Hub is running");
 });
 
 app.listen(port, () => {
