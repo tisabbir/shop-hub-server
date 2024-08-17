@@ -47,6 +47,10 @@ async function run() {
       const minPrice = parseInt(req.query.minPrice) || 0; // Minimum price filter from the frontend
       const maxPrice = parseInt(req.query.maxPrice) || Number.MAX_SAFE_INTEGER; // Maximum price filter from the frontend
 
+      const sortField = req.query.sortField || ""; // Brand filter from the frontend
+      const sortOrder = req.query.sortOrder || ""; // Brand filter from the frontend
+
+
       // Create a filter based on the search query, category, brand, and price range
       const query = {
         ...(searchQuery && { name: { $regex: searchQuery, $options: "i" } }),
@@ -55,23 +59,28 @@ async function run() {
         price: { $gte: minPrice, $lte: maxPrice },
       };
 
+      // **Sorting logic**
+  const sortOptions = {};
+  if (sortField && sortOrder) {
+    sortOptions[sortField] = sortOrder === "asc" ? 1 : -1;
+  }
+
       // Get the total number of products in the collection
       const totalProducts = await products.countDocuments(query);
 
       // Fetch the products with pagination
-      const result = await products
-        .find(query)
-        .skip(skip)
-        .limit(limit)
-        .toArray();
+      const productsList = await products
+    .find(query)
+    .sort(sortOptions) // **Apply sorting**
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit))
+    .toArray();
 
       // Send the paginated products along with pagination info
-      res.json({
-        page,
-        limit,
-        totalPages: Math.ceil(totalProducts / limit),
+      res.send({
+        products: productsList,
         totalProducts,
-        products: result,
+        totalPages: Math.ceil(totalProducts / limit),
       });
     });
 
