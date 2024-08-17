@@ -36,22 +36,20 @@ async function run() {
 
     // Pagination Route
     app.get("/products", async (req, res) => {
-      const page = parseInt(req.query.page) || 1; // Current page number, default to 1 if not provided
-      const limit = parseInt(req.query.limit) || 9; // Number of products per page, default to 10 if not provided
-      const skip = (page - 1) * limit; // Calculate how many products to skip
+      const page = parseInt(req.query.page) || 1; 
+      const limit = parseInt(req.query.limit) || 9;
+      const skip = (page - 1) * limit;
+      const searchQuery = req.query.search || ""; 
 
-      const searchQuery = req.query.search || ""; // Search query from the frontend
+      const category = req.query.category || "";
+      const brand = req.query.brand || ""; 
+      const minPrice = parseInt(req.query.minPrice) || 0; 
+      const maxPrice = parseInt(req.query.maxPrice) || Number.MAX_SAFE_INTEGER; 
 
-      const category = req.query.category || ""; // Category filter from the frontend
-      const brand = req.query.brand || ""; // Brand filter from the frontend
-      const minPrice = parseInt(req.query.minPrice) || 0; // Minimum price filter from the frontend
-      const maxPrice = parseInt(req.query.maxPrice) || Number.MAX_SAFE_INTEGER; // Maximum price filter from the frontend
+      const sortField = req.query.sortField || ""; 
+      const sortOrder = req.query.sortOrder || ""; 
 
-      const sortField = req.query.sortField || ""; // Brand filter from the frontend
-      const sortOrder = req.query.sortOrder || ""; // Brand filter from the frontend
-
-
-      // Create a filter based on the search query, category, brand, and price range
+      //  filter search query, category, brand, and price
       const query = {
         ...(searchQuery && { name: { $regex: searchQuery, $options: "i" } }),
         ...(category && { category: category }),
@@ -59,24 +57,24 @@ async function run() {
         price: { $gte: minPrice, $lte: maxPrice },
       };
 
-      // **Sorting logic**
+    
   const sortOptions = {};
   if (sortField && sortOrder) {
     sortOptions[sortField] = sortOrder === "asc" ? 1 : -1;
   }
 
-      // Get the total number of products in the collection
+     
       const totalProducts = await products.countDocuments(query);
 
-      // Fetch the products with pagination
+      
       const productsList = await products
     .find(query)
-    .sort(sortOptions) // **Apply sorting**
+    .sort(sortOptions) 
     .skip((page - 1) * limit)
     .limit(parseInt(limit))
     .toArray();
 
-      // Send the paginated products along with pagination info
+      
       res.send({
         products: productsList,
         totalProducts,
